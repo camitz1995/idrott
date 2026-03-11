@@ -2,12 +2,17 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Idrottsloggen PRO</title>
     <style>
-        body { font-family: sans-serif; padding: 15px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 10px; margin: 0; background-color: #f4f4f9; }
+        button { padding: 12px; margin: 5px 0; width: 100%; border: none; background: #007bff; color: white; border-radius: 8px; font-size: 16px; font-weight: bold; }
+        select, input { padding: 12px; margin: 5px 0; width: 100%; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        nav { display: flex; gap: 5px; margin-bottom: 20px; }
+        nav button { font-size: 12px; padding: 10px; background: #333; }
         section { display: none; } .active { display: block; }
-        .card { border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; background: #f9f9f9; }
-        button { cursor: pointer; }
+        .card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 10px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        h2 { color: #333; margin-top: 0; }
     </style>
 </head>
 <body>
@@ -24,25 +29,28 @@
             <select id="l-student"><option value="">Välj elev...</option></select>
             <select id="l-area" onchange="updateMomentDropdown()"><option value="">Välj område...</option></select>
             <select id="l-moment"><option value="">Välj moment...</option></select>
-            <select id="l-level"><option value="A">A</option><option value="C">C</option><option value="E">E</option></select>
+            <select id="l-level"><option value="A">A</option><option value="C">C</option><option value="E">E</option><option value="F">F</option><option value="-">-</option></select>
             <button onclick="saveLog()">Spara Logg</button>
         </section>
+
         <section id="class-view">
-            <h2>Klasser & Elever</h2>
-            <input id="in-class" placeholder="Ny klass...">
-            <button onclick="addClass()">Lägg till</button>
+            <h2>Hantera Klasser</h2>
+            <input id="in-class" placeholder="Klassnamn...">
+            <button onclick="addClass()">Lägg till klass</button>
             <div id="class-list"></div>
         </section>
+
         <section id="settings-view">
-            <h2>Områden & Moment</h2>
-            <input id="in-area" placeholder="Nytt område...">
+            <h2>Hantera Områden</h2>
+            <input id="in-area" placeholder="Områdesnamn...">
             <button onclick="addArea()">Lägg till område</button>
             <div id="area-list"></div>
         </section>
+
         <section id="stats-view">
-            <h2>Slutbetyg</h2>
-            <select id="s-class" onchange="updateStatsStudents()"></select>
-            <select id="s-student" onchange="renderReport()"></select>
+            <h2>Betygssammanställning</h2>
+            <select id="s-class" onchange="updateStatsStudents()"><option value="">Välj klass...</option></select>
+            <select id="s-student" onchange="renderReport()"><option value="">Välj elev...</option></select>
             <div id="final-report"></div>
         </section>
     </main>
