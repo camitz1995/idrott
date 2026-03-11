@@ -2,45 +2,48 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Idrottsloggen Pro</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Idrottsloggen PRO</title>
+    <style>
+        body { font-family: sans-serif; padding: 15px; }
+        section { display: none; } .active { display: block; }
+        .card { border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 5px; background: #f9f9f9; }
+        button { cursor: pointer; }
+    </style>
 </head>
 <body>
     <nav>
         <button onclick="showSection('log-view')">Logga</button>
         <button onclick="showSection('class-view')">Klasser</button>
-        <button onclick="showSection('student-view')">Elevanalys</button>
+        <button onclick="showSection('settings-view')">Områden</button>
+        <button onclick="showSection('stats-view')">Betyg</button>
     </nav>
-
-    <main id="app">
-        <section id="log-view">
-            <h2>Logga prestation</h2>
-            <form id="log-form">
-                <select id="l-class" onchange="updateStudentDropdown()" required><option value="">Välj klass...</option></select>
-                <select id="l-student" required><option value="">Välj elev...</option></select>
-                <select id="l-area" onchange="updateMomentDropdown()" required><option value="">Välj område...</option></select>
-                <select id="l-moment" required><option value="">Välj moment...</option></select>
-                <select id="l-level" required>
-                    <option value="Ej visat">Ej visat</option><option value="På väg">På väg</option>
-                    <option value="E">E</option><option value="C">C</option><option value="A">A</option>
-                </select>
-                <button type="submit">Spara Logg</button>
-            </form>
+    <main>
+        <section id="log-view" class="active">
+            <h2>Logga Prestation</h2>
+            <select id="l-class" onchange="updateStudentDropdown()"><option value="">Välj klass...</option></select>
+            <select id="l-student"><option value="">Välj elev...</option></select>
+            <select id="l-area" onchange="updateMomentDropdown()"><option value="">Välj område...</option></select>
+            <select id="l-moment"><option value="">Välj moment...</option></select>
+            <select id="l-level"><option value="A">A</option><option value="C">C</option><option value="E">E</option></select>
+            <button onclick="saveLog()">Spara Logg</button>
         </section>
-
-        <section id="class-view" style="display:none;">
-            <h2>Hantera Klasser & Elever</h2>
-            <input type="text" id="new-class" placeholder="Klassnamn (t.ex. 7C)">
-            <button onclick="addClass()">Lägg till klass</button>
-            <div id="class-editor"></div>
+        <section id="class-view">
+            <h2>Klasser & Elever</h2>
+            <input id="in-class" placeholder="Ny klass...">
+            <button onclick="addClass()">Lägg till</button>
+            <div id="class-list"></div>
         </section>
-
-        <section id="student-view" style="display:none;">
-            <h2>Elevanalys</h2>
-            <select id="s-class" onchange="updateSearchStudent()"><option value="">Välj klass...</option></select>
-            <select id="s-student" onchange="renderReport()"><option value="">Välj elev...</option></select>
-            <div id="report-container"></div>
+        <section id="settings-view">
+            <h2>Områden & Moment</h2>
+            <input id="in-area" placeholder="Nytt område...">
+            <button onclick="addArea()">Lägg till område</button>
+            <div id="area-list"></div>
+        </section>
+        <section id="stats-view">
+            <h2>Slutbetyg</h2>
+            <select id="s-class" onchange="updateStatsStudents()"></select>
+            <select id="s-student" onchange="renderReport()"></select>
+            <div id="final-report"></div>
         </section>
     </main>
     <script src="app.js"></script>
