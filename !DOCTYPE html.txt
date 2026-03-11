@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Idrottsloggen</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+    <nav>
+        <button onclick="showSection('log-view')">Logga</button>
+        <button onclick="showSection('admin-view')">Elever</button>
+        <button onclick="showSection('stats-view')">Betyg</button>
+    </nav>
+
+    <main id="app">
+        <section id="log-view">
+            <h2>Ny Loggning</h2>
+            <form id="log-form">
+                <input type="date" id="date" required>
+                
+                <select id="class-select" onchange="updateStudentDropdown()" required>
+                    <option value="">Välj klass...</option>
+                </select>
+
+                <select id="student-select" required>
+                    <option value="">Välj elev...</option>
+                </select>
+
+                <select id="area-select" onchange="updateMomentDropdown()" required>
+                    <option value="">Välj område...</option>
+                </select>
+
+                <select id="moment-select" required>
+                    <option value="">Välj moment...</option>
+                </select>
+
+                <select id="level-select" required>
+                    <option value="Ej visat">Ej visat</option>
+                    <option value="På väg">På väg</option>
+                    <option value="E">E</option>
+                    <option value="C">C</option>
+                    <option value="A">A</option>
+                </select>
+
+                <textarea id="comment" placeholder="Kommentar..."></textarea>
+                <button type="submit" class="btn-save">Spara Logg</button>
+            </form>
+        </section>
+
+        <section id="admin-view" style="display:none;">
+            <h2>Hantera Elever</h2>
+            <select id="admin-class-select">
+                <option value="7C">7C</option><option value="7D">7D</option>
+                <option value="8C">8C</option><option value="9C">9C</option>
+                <option value="9D">9D</option><option value="9F">9F</option>
+            </select>
+            <textarea id="student-names" placeholder="Skriv namn separerade med kommatecken eller radbrytning..."></textarea>
+            <button onclick="saveStudents()" class="btn-save">Spara Klasslista</button>
+        </section>
+
+        <section id="stats-view" style="display:none;">
+            <h2>Sammanställning & Export</h2>
+            <div id="grades-report"></div>
+            <button onclick="exportCSV()" class="btn-export">Exportera CSV (Excel)</button>
+            <button onclick="clearAllData()" class="btn-danger">Rensa all data</button>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
