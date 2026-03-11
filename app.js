@@ -13,31 +13,36 @@ const dataStructure = {
     "Skador / skadeförebyggande": ["Ergonomi", "Förebygga", "Första hjälpen"]
 };
 
-const classes = ["7C", "7D", "8C", "9C", "9D", "9F"];
+let classes = JSON.parse(localStorage.getItem('my_classes')) || ["7C", "7D", "8C", "9C", "9D", "9F"];
 
-// Initiera appen
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('date').valueAsDate = new Date();
-    setupDropdowns();
-    loadStudentsIntoSelect();
+    document.getElementById('class-input').value = classes.join(', ');
+    updateClassDropdowns();
     renderGrades();
 });
 
-function setupDropdowns() {
-    const classSel = document.getElementById('class-select');
-    classes.forEach(c => classSel.add(new Option(c, c)));
+function saveClasses() {
+    const input = document.getElementById('class-input').value;
+    classes = input.split(',').map(c => c.trim()).filter(c => c !== "");
+    localStorage.setItem('my_classes', JSON.stringify(classes));
+    alert('Klasser uppdaterade!');
+    updateClassDropdowns();
+}
 
-    const areaSel = document.getElementById('area-select');
-    Object.keys(dataStructure).forEach(area => areaSel.add(new Option(area, area)));
+function updateClassDropdowns() {
+    const classSels = [document.getElementById('class-select'), document.getElementById('admin-class-select')];
+    classSels.forEach(sel => {
+        sel.innerHTML = '<option value="">Välj klass...</option>';
+        classes.forEach(c => sel.add(new Option(c, c)));
+    });
 }
 
 function updateMomentDropdown() {
     const area = document.getElementById('area-select').value;
     const momentSel = document.getElementById('moment-select');
     momentSel.innerHTML = '<option value="">Välj moment...</option>';
-    if(area) {
-        dataStructure[area].forEach(m => momentSel.add(new Option(m, m)));
-    }
+    if(area) dataStructure[area].forEach(m => momentSel.add(new Option(m, m)));
 }
 
 function updateStudentDropdown() {
@@ -48,117 +53,55 @@ function updateStudentDropdown() {
     students.sort().forEach(s => studentSel.add(new Option(s, s)));
 }
 
-function showSection(id) {
-    document.querySelectorAll('section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    if(id === 'stats-view') renderGrades();
-}
-
-// Spara data
 document.getElementById('log-form').onsubmit = (e) => {
     e.preventDefault();
-    const logEntry = {
+    const logs = JSON.parse(localStorage.getItem('logs') || "[]");
+    logs.push({
         date: document.getElementById('date').value,
         class: document.getElementById('class-select').value,
         student: document.getElementById('student-select').value,
         area: document.getElementById('area-select').value,
         moment: document.getElementById('moment-select').value,
         level: document.getElementById('level-select').value,
-        comment: document.getElementById('comment').value
-    };
-    
-    const logs = JSON.parse(localStorage.getItem('logs') || "[]");
-    logs.push(logEntry);
+        comment: document.getElementById('comment').value,
+        id: Date.now()
+    });
     localStorage.setItem('logs', JSON.stringify(logs));
-    
-    alert('Sparat!');
+    alert('Loggat!');
     e.target.reset();
     document.getElementById('date').valueAsDate = new Date();
+    renderGrades();
 };
-
-// Admin: Spara elever
-function saveStudents() {
-    const className = document.getElementById('admin-class-select').value;
-    const names = document.getElementById('student-names').value
-        .split(/[\n,]/)
-        .map(s => s.trim())
-        .filter(s => s !== "");
-    
-    localStorage.setItem('students_' + className, JSON.stringify(names));
-    alert('Klasslista sparad för ' + className);
-    document.getElementById('student-names').value = "";
-}
-
-// Logik för betyg
-function calculateGrades(studentLogs) {
-    const areas = {};
-    studentLogs.forEach(log => {
-        if(!areas[log.area]) areas[log.area] = [];
-        areas[log.area].push(log.level);
-    });
-
-    const stableLevels = {};
-    const weight = {"A": 4, "C": 3, "E": 2, "På väg": 1, "Ej visat": 0};
-    
-    for (const area in areas) {
-        const counts = {"A":0, "C":0, "E":0};
-        areas[area].forEach(l => { if(counts[l] !== undefined) counts[l]++; });
-        
-        if(counts["A"] >= 2) stableLevels[area] = "A";
-        else if(counts["C"] >= 2) stableLevels[area] = "C";
-        else if(counts["E"] >= 2) stableLevels[area] = "E";
-        else stableLevels[area] = "F/På väg";
-    }
-
-    const levels = Object.values(stableLevels);
-    let finalGrade = "-";
-    if(levels.length > 0) {
-        if(levels.includes("F/På väg")) finalGrade = "F";
-        else if(levels.every(l => l === "A")) finalGrade = "A";
-        else if(levels.every(l => l === "A" || l === "C")) finalGrade = "C";
-        else finalGrade = "E";
-    }
-
-    return { stableLevels, finalGrade };
-}
 
 function renderGrades() {
     const logs = JSON.parse(localStorage.getItem('logs') || "[]");
     const container = document.getElementById('grades-report');
-    container.innerHTML = "";
-
-    const students = [...new Set(logs.map(l => l.student))];
-
-    students.forEach(s => {
-        const sLogs = logs.filter(l => l.student === s);
-        const { stableLevels, finalGrade } = calculateGrades(sLogs);
-        
-        const card = document.createElement('div');
-        card.className = 'grade-card';
-        card.innerHTML = `<strong>${s} (${sLogs[0].class})</strong><br>
-            <small>Slutbetyg (indikativt): ${finalGrade}</small><hr>
-            ${Object.entries(stableLevels).map(([a, l]) => `${a}: ${l}`).join('<br>')}`;
-        container.appendChild(card);
-    });
-}
-
-function exportCSV() {
-    const logs = JSON.parse(localStorage.getItem('logs') || "[]");
-    let csv = "Datum,Klass,Elev,Område,Moment,Nivå,Kommentar\n";
+    container.innerHTML = "<h3>Logghistorik</h3>";
     logs.forEach(l => {
-        csv += `${l.date},${l.class},${l.student},${l.area},${l.moment},${l.level},"${l.comment}"\n`;
+        const div = document.createElement('div');
+        div.className = 'grade-card';
+        div.innerHTML = `<strong>${l.student} (${l.class})</strong> - ${l.area}<br>${l.moment}: <strong>${l.level}</strong><br><small>${l.date}</small> <button onclick="deleteLog(${l.id})" style="background:red; color:white; border:none; padding:5px; margin-left:10px;">Radera</button>`;
+        container.appendChild(div);
     });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "idrottslogg_export.csv";
-    link.click();
 }
 
-function clearAllData() {
-    if(confirm("Vill du verkligen radera ALLA loggar?")) {
-        localStorage.removeItem('logs');
+function deleteLog(id) {
+    if(confirm("Radera denna logg?")) {
+        let logs = JSON.parse(localStorage.getItem('logs') || "[]");
+        logs = logs.filter(l => l.id !== id);
+        localStorage.setItem('logs', JSON.stringify(logs));
         renderGrades();
     }
 }
 
+function saveStudents() {
+    const className = document.getElementById('admin-class-select').value;
+    const names = document.getElementById('student-names').value.split(/[\n,]/).map(s => s.trim()).filter(s => s !== "");
+    localStorage.setItem('students_' + className, JSON.stringify(names));
+    alert('Elever sparade!');
+}
+
+function showSection(id) {
+    document.querySelectorAll('section').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+}
