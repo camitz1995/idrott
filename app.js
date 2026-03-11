@@ -1,4 +1,5 @@
-const dataStructure = {
+// Förinstallerade områden
+const defaultAreas = {
     "Lekar & samarbete": ["Lekar", "Stafetter", "Hinderbana"],
     "Bollspel": ["Innebandy", "Basket", "Fotboll"],
     "Friidrott": ["60 m", "Längd", "Kula"],
@@ -9,103 +10,85 @@ const dataStructure = {
     "Orientering": ["Karttecken", "Riktning"]
 };
 
-let classes = JSON.parse(localStorage.getItem('myClasses')) || {};
+let db = JSON.parse(localStorage.getItem('proDb')) || { classes: {}, areas: defaultAreas, logs: [] };
+function save() { localStorage.setItem('proDb', JSON.stringify(db)); render(); }
 
-document.addEventListener('DOMContentLoaded', () => { refreshUI(); });
-
-function refreshUI() {
-    updateClassDropdowns();
-    renderClassEditor();
-}
-
+// Hantera klasser/elever
 function addClass() {
-    const input = document.getElementById('new-class');
-    const name = input.value;
-    if(name && !classes[name]) {
-        classes[name] = [];
-        save();
-        input.value = '';
-        refreshUI();
-    }
+    let name = document.getElementById('in-class').value;
+    if(name) { db.classes[name] = []; save(); }
+}
+function delClass(c) { delete db.classes[c]; save(); }
+function addStudent(c) { let name = prompt("Namn:"); if(name) { db.classes[c].push(name); save(); } }
+function delStudent(c, name) { db.classes[c] = db.classes[c].filter(s => s !== name); save(); }
+
+// Hantera områden/moment
+function addArea() {
+    let name = document.getElementById('in-area').value;
+    if(name) { db.areas[name] = []; save(); }
+}
+function delArea(a) { delete db.areas[a]; save(); }
+function addMoment(a) { let m = prompt("Moment:"); if(m) { db.areas[a].push(m); save(); } }
+function delMoment(a, m) { db.areas[a] = db.areas[a].filter(item => item !== m); save(); }
+
+// Loggning & Rapport
+function saveLog() {
+    db.logs.push({ student: document.getElementById('l-student').value, area: document.getElementById('l-area').value, level: document.getElementById('l-level').value });
+    save(); alert("Sparat!");
+}
+function renderReport() {
+    let s = document.getElementById('s-student').value;
+    let logs = db.logs.filter(l => l.student === s);
+    let cont = document.getElementById('final-report');
+    cont.innerHTML = `<h3>Slutbetyg ${s}</h3>` + Object.keys(db.areas).map(area => {
+        let areaLogs = logs.filter(l => l.area === area).map(l => l.level);
+        return `<p><b>${area}:</b> ${areaLogs.length > 0 ? areaLogs[areaLogs.length-1] : "Ej visat"}</p>`;
+    }).join('');
 }
 
-function addStudent(className) {
-    const name = prompt("Elevens namn:");
-    if(name) {
-        classes[className].push(name);
-        save();
-        refreshUI();
-    }
-}
-
-function save() { localStorage.setItem('myClasses', JSON.stringify(classes)); }
-
-function updateClassDropdowns() {
-    const selects = [document.getElementById('l-class'), document.getElementById('s-class')];
-    selects.forEach(s => {
-        s.innerHTML = '<option value="">Välj klass...</option>';
-        Object.keys(classes).forEach(c => s.add(new Option(c, c)));
-    });
+// UI
+function render() {
+    document.getElementById('class-list').innerHTML = Object.keys(db.classes).map(c => `
+        <div class="card"><h4>${c} <button onclick="delClass('${c}')">Radera Klass</button></h4>
+        <button onclick="addStudent('${c}')">+ Elev</button>
+        <ul>${db.classes[c].map(st => `<li>${st} <button onclick="delStudent('${c}','${st}')">x</button></li>`).join('')}</ul></div>`).join('');
+    
+    document.getElementById('area-list').innerHTML = Object.keys(db.areas).map(a => `
+        <div class="card"><h4>${a} <button onclick="delArea('${a}')">Radera Område</button></h4>
+        <button onclick="addMoment('${a}')">+ Moment</button>
+        <ul>${db.areas[a].map(m => `<li>${m} <button onclick="delMoment('${a}','${m}')">x</button></li>`).join('')}</ul></div>`).join('');
+    
+    // Dropdowns
+    let cSelects = [document.getElementById('l-class'), document.getElementById('s-class')];
+    cSelects.forEach(s => { s.innerHTML = '<option value="">Välj klass...</option>'; Object.keys(db.classes).forEach(c => s.add(new Option(c, c))); });
+    let aSelect = document.getElementById('l-area');
+    aSelect.innerHTML = '<option value="">Välj område...</option>';
+    Object.keys(db.areas).forEach(a => aSelect.add(new Option(a, a)));
 }
 
 function updateStudentDropdown() {
-    const c = document.getElementById('l-class').value;
-    const s = document.getElementById('l-student');
+    let c = document.getElementById('l-class').value;
+    let s = document.getElementById('l-student');
     s.innerHTML = '<option value="">Välj elev...</option>';
-    if(classes[c]) classes[c].forEach(n => s.add(new Option(n, n)));
+    if(db.classes[c]) db.classes[c].forEach(n => s.add(new Option(n, n)));
 }
 
-function updateSearchStudent() {
-    const c = document.getElementById('s-class').value;
-    const s = document.getElementById('s-student');
+function updateStatsStudents() {
+    let c = document.getElementById('s-class').value;
+    let s = document.getElementById('s-student');
     s.innerHTML = '<option value="">Välj elev...</option>';
-    if(classes[c]) classes[c].forEach(n => s.add(new Option(n, n)));
+    if(db.classes[c]) db.classes[c].forEach(n => s.add(new Option(n, n)));
 }
 
 function updateMomentDropdown() {
-    const area = document.getElementById('l-area').value;
-    const m = document.getElementById('l-moment');
-    m.innerHTML = '<option value="">Välj moment...</option>';
-    if(dataStructure[area]) dataStructure[area].forEach(val => m.add(new Option(val, val)));
-}
-
-document.getElementById('log-form').onsubmit = (e) => {
-    e.preventDefault();
-    const logs = JSON.parse(localStorage.getItem('logs') || "[]");
-    logs.push({
-        student: document.getElementById('l-student').value,
-        area: document.getElementById('l-area').value,
-        level: document.getElementById('l-level').value,
-        date: new Date().toLocaleDateString()
-    });
-    localStorage.setItem('logs', JSON.stringify(logs));
-    alert('Loggat!');
-};
-
-function renderReport() {
-    const s = document.getElementById('s-student').value;
-    const logs = JSON.parse(localStorage.getItem('logs') || "[]").filter(l => l.student === s);
-    const container = document.getElementById('report-container');
-    container.innerHTML = `<h3>Resultat för ${s}</h3>`;
-    Object.keys(dataStructure).forEach(area => {
-        const areaLogs = logs.filter(l => l.area === area).map(l => l.level);
-        const latest = areaLogs.length > 0 ? areaLogs[areaLogs.length - 1] : "Ej påbörjad";
-        container.innerHTML += `<p><b>${area}:</b> ${latest}</p>`;
-    });
-}
-
-function renderClassEditor() {
-    const container = document.getElementById('class-editor');
-    container.innerHTML = "";
-    Object.keys(classes).forEach(c => {
-        container.innerHTML += `<div><h4>${c}</h4>
-            <button onclick="addStudent('${c}')">+ Elev</button>
-            <ul>${classes[c].map(name => `<li>${name}</li>`).join('')}</ul>
-        </div>`;
-    });
+    let area = document.getElementById('l-area').value;
+    let m = document.getElementById('l-moment');
+    m.innerHTML = db.areas[area] ? db.areas[area].map(i => `<option>${i}</option>`) : '';
 }
 
 function showSection(id) {
-    document.querySelectorAll('section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
 }
+
+document.addEventListener('DOMContentLoaded', render);
