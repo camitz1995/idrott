@@ -2,60 +2,48 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Idrottsloggen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Idrottsloggen Pro</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
     <nav>
         <button onclick="showSection('log-view')">Logga</button>
-        <button onclick="showSection('admin-view')">Elever</button>
-        <button onclick="showSection('stats-view')">Betyg</button>
-        <button onclick="showSection('settings-view')">Inställningar</button>
+        <button onclick="showSection('class-view')">Klasser</button>
+        <button onclick="showSection('student-view')">Elever</button>
     </nav>
 
     <main id="app">
         <section id="log-view">
             <h2>Ny Loggning</h2>
             <form id="log-form">
-                <input type="date" id="date" required>
                 <select id="class-select" onchange="updateStudentDropdown()" required><option value="">Välj klass...</option></select>
                 <select id="student-select" required><option value="">Välj elev...</option></select>
                 <select id="area-select" onchange="updateMomentDropdown()" required><option value="">Välj område...</option></select>
                 <select id="moment-select" required><option value="">Välj moment...</option></select>
                 <select id="level-select" required>
-                    <option value="Ej visat">Ej visat</option>
-                    <option value="På väg">På väg</option>
-                    <option value="E">E</option>
-                    <option value="C">C</option>
-                    <option value="A">A</option>
+                    <option value="Ej visat">Ej visat</option><option value="På väg">På väg</option>
+                    <option value="E">E</option><option value="C">C</option><option value="A">A</option>
                 </select>
-                <textarea id="comment" placeholder="Kommentar..."></textarea>
                 <button type="submit" class="btn-save">Spara Logg</button>
             </form>
         </section>
 
-        <section id="admin-view" style="display:none;">
-            <h2>Hantera Elever</h2>
-            <select id="admin-class-select"></select>
-            <textarea id="student-names" placeholder="Namn (separera med kommatecken)"></textarea>
-            <button onclick="saveStudents()" class="btn-save">Spara Klasslista</button>
+        <section id="class-view" style="display:none;">
+            <h2>Hantera Klasser</h2>
+            <input type="text" id="new-class-name" placeholder="Klassnamn (t.ex. 7C)">
+            <button onclick="addClass()" class="btn-save">Lägg till klass</button>
+            <div id="class-list-container"></div>
         </section>
 
-        <section id="stats-view" style="display:none;">
-            <div id="grades-report"></div>
-        </section>
-
-        <section id="settings-view" style="display:none;">
-            <h2>Klasshantering</h2>
-            <p>Skriv klassnamn (t.ex. 7C, 7D, 8C):</p>
-            <input type="text" id="class-input">
-            <button onclick="saveClasses()" class="btn-save">Spara Klasslista</button>
+        <section id="student-view" style="display:none;">
+            <h2>Elevsökning</h2>
+            <select id="search-class" onchange="updateSearchStudent()"><option value="">Välj klass...</option></select>
+            <select id="search-student" onchange="renderStudentReport()"><option value="">Välj elev...</option></select>
+            <div id="student-report"></div>
         </section>
     </main>
-
     <script src="app.js"></script>
 </body>
 </html>
